@@ -1,0 +1,18 @@
+name: My First workflow
+
+on:
+  push:
+
+jobs:
+  Job-1:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Print a message
+        run: echo "Hello! GitHub Actions is working!"
+
+      - name: Print the date
+        run: date
+
+      - name: List files
+        run: ls -la
