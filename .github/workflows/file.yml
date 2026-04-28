@@ -1,22 +1,28 @@
-name: My First workflow
+name: My First Workflows
 
 on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "45 21 28 4 2"
+
 jobs:
-  Job-1:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Print a message
-        run: echo "Hello! GitHub Actions is working!"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-      - name: Print the date
-        run: date
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Building app..."
 
-      - name: List files
-        run: ls -lstr
-
-
-
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying..."
