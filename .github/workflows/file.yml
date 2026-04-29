@@ -1,28 +1,21 @@
-name: My First Workflows
+name: My First Workflow
 
 on:
   push:
-    branches:
-      - main
-  schedule:
-    - cron: "45 21 28 4 2"
+    branches: [main]
 
 jobs:
-  test:
+  runscripts:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/setup-node@v4
+      - name: Checkout Python code
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v4
         with:
-          node-version: "20"
+          python-version: '3.13'
 
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Building app..."
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Deploying..."
+      - name: Run Python Script
+        run: python hello.py
