@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+ 
+# Build artifacts
+dist/
+build/
+ 
+# Environment variables
+.env
+.env.local
+.env.production
+ 
+# SSH Keys
+*.pem
+*.key
+ 
+# Deployment artifacts
+deployment.tar.gz
+ 
+# OS Files
+.DS_Store
+Thumbs.db
+ 
+# Logs
+*.log
+npm-debug.log*
+logs/

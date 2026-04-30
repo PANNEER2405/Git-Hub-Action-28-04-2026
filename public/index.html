@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Node.js App</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>My Node.js App</h1>
+    <p id="deploy-info">Loading deployment info...</p>
+  </header>
+  <main>
+    <div class="card">
+      <h2>Server Status</h2>
+      <div id="status" class="status-badge">Checking...</div>
+    </div>
+    <div class="card">
+      <h2>API Test</h2>
+      <button id="fetch-btn" onclick="fetchData()">Fetch Data</button>
+      <pre id="api-result"></pre>
+    </div>
+  </main>
+  <script>
+    fetch('/api/info')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('deploy-info').textContent =
+          `Deployed: ${d.deployedAt} | Version: ${d.version}`;
+        document.getElementById('status').textContent = 'Online';
+        document.getElementById('status').classList.add('online');
+      });
+    function fetchData() {
+      fetch('/api/data')
+        .then(r => r.json())
+        .then(d => {
+          document.getElementById('api-result').textContent =
+            JSON.stringify(d, null, 2);
+        });
+    }
+  </script>
+</body>
+</html>
+

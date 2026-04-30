@@ -1,0 +1,66 @@
+name: Build and Deploy to EC2
+ 
+on:
+  push:
+    branches:
+      - main          # change to 'master' if you use master
+ 
+jobs:
+  build-and-deploy:
+    name: Build on GitHub Runner & Deploy to EC2
+    runs-on: ubuntu-latest          # GitHub's machine, NOT your EC2
+ 
+    steps:
+      # ── Step 1: Check out code ──────────────────────────────────
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+ 
+      # ── Step 2: Set up Node.js (runs on GitHub runner) ──────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+ 
+      # ── Step 3: Install dependencies (on GitHub runner) ─────────
+      - name: Install Dependencies
+        run: npm install
+ 
+      # ── Step 4: Run tests (on GitHub runner) ────────────────────
+      - name: Run Tests
+        run: npm test
+ 
+      # ── Step 5: Build application (on GitHub runner) ────────────
+      - name: Build Application
+        run: npm run build
+        env:
+          NODE_ENV: production
+ 
+      # ── Step 6: Create deployment archive ───────────────────────
+      - name: Create Deployment Package
+        run: |
+          # Exclude dev files from the archive
+          tar -czf /tmp/deployment.tar.gz --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='*.test.js' .
+          mv /tmp/deployment.tar.gz ./deployment.tar.gz
+          ls -lh deployment.tar.gz
+ 
+      # ── Step 7: Copy archive to EC2 via SCP ─────────────────────
+      - name: Copy Files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host:     ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
+          source:   'deployment.tar.gz,scripts/deploy.sh'
+          target:   '/home/${{ secrets.EC2_USER }}/deployments'
+ 
+      # ── Step 8: SSH into EC2 and run deploy script ───────────────
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host:     ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.EC2_USER }}/deployments
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
