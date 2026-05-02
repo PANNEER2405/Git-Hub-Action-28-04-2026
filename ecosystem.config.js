@@ -13,7 +13,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3000,
         DB_HOST: '52.201.114.104',
-        DB_USER: 'appuse',
+        DB_USER: 'appuser',
         DB_PASSWORD: 'App@12345',
         DB_NAME: 'testdb'
       }
