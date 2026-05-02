@@ -7,109 +7,132 @@ on:
  
 jobs:
   build-and-deploy:
-    name: Build on GitHub Runner & Deploy to EC2
     runs-on: ubuntu-latest
  
     steps:
-      # ── Step 1: Check out code ──────────────────────────────────
+      # ── Step 1: Checkout ─────────────────────────────
       - name: Checkout Repository
         uses: actions/checkout@v4
  
-      # ── Step 2: Set up Node.js ──────────────────────────────────
+      # ── Step 2: Setup Node ───────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
  
-      # ── Step 3: Install dependencies ────────────────────────────
+      # ── Step 3: Install deps ─────────────────────────
       - name: Install Dependencies
         run: npm install
  
-      # ── Step 4: Run tests ──────────────────────────────────────
+      # ── Step 4: Test ────────────────────────────────
       - name: Run Tests
         run: npm test
  
-      # ── Step 5: Build application ──────────────────────────────
+      # ── Step 5: Build ───────────────────────────────
       - name: Build Application
         run: npm run build
         env:
           NODE_ENV: production
  
-      # ── Step 6: Create deployment archive ──────────────────────
+      # ── Step 6: Package ─────────────────────────────
       - name: Create Deployment Package
         run: |
           tar -czf /tmp/deployment.tar.gz --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='*.test.js' .
           mv /tmp/deployment.tar.gz ./deployment.tar.gz
           ls -lh deployment.tar.gz
  
-      # ==========================================================
-      # 🔥 NEW PART → DB SETUP (RUNS ON DB EC2)
-      # ==========================================================
+      # ==================================================
+      # 🔥 DB SETUP (DB EC2)
+      # ==================================================
  
-      # ── Step 7: Copy DB Setup Script to DB EC2 ─────────────────
       - name: Copy DB Script to DB EC2
         uses: appleboy/scp-action@master
         with:
-          host:     ${{ secrets.DB_EC2_HOST }}
+          host: ${{ secrets.DB_EC2_HOST }}
           username: ${{ secrets.DB_EC2_USER }}
-          key:      ${{ secrets.DB_EC2_SSH_KEY }}
-          source:   "scripts/db-setup.sh"
-          target:   "/home/${{ secrets.DB_EC2_USER }}/"
+          key: ${{ secrets.DB_EC2_SSH_KEY }}
+          source: "scripts/db-setup.sh"
+          target: "/home/${{ secrets.DB_EC2_USER }}/"
  
-      # ── Step 8: Run DB Setup on DB EC2 ─────────────────────────
       - name: Run DB Setup
         uses: appleboy/ssh-action@master
         with:
-          host:     ${{ secrets.DB_EC2_HOST }}
+          host: ${{ secrets.DB_EC2_HOST }}
           username: ${{ secrets.DB_EC2_USER }}
-          key:      ${{ secrets.DB_EC2_SSH_KEY }}
+          key: ${{ secrets.DB_EC2_SSH_KEY }}
           script: |
             chmod +x db-setup.sh
             ./db-setup.sh
  
-      # ==========================================================
-      # EXISTING FLOW CONTINUES (APP DEPLOY)
-      # ==========================================================
+      # ==================================================
+      # 🚀 APP DEPLOY (APP EC2)
+      # ==================================================
  
-      # ── Step 9: Copy Files to App EC2 ──────────────────────────
-      - name: Copy Files to EC2
+      - name: Copy Files to App EC2
         uses: appleboy/scp-action@master
         with:
-          host:     ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key:      ${{ secrets.EC2_SSH_KEY }}
-          source:   'deployment.tar.gz,scripts/deploy.sh'
-          target:   '/home/${{ secrets.EC2_USER }}/deployments'
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deployment.tar.gz,scripts/deploy.sh"
+          target: "/home/${{ secrets.EC2_USER }}/deployments"
  
-      # ── Step 10: Deploy on App EC2 ─────────────────────────────
-      - name: Deploy on EC2
+      - name: Deploy on App EC2
         uses: appleboy/ssh-action@master
         with:
-          host:     ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key:      ${{ secrets.EC2_SSH_KEY }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            export DB_HOST=${{ secrets.DB_HOST }}
+            export DB_USER=${{ secrets.DB_USER }}
+            export DB_PASS=${{ secrets.DB_PASS }}
+            export DB_NAME=${{ secrets.DB_NAME }}
+
             cd /home/${{ secrets.EC2_USER }}/deployments
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
-
-
-                  - name: Send Success Email
+ 
+      # ==================================================
+      # 📩 EMAIL NOTIFICATIONS
+      # ==================================================
+ 
+      - name: Send Success Email
         if: success()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.EMAIL_USER_NAME }}
+          username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "✅ Deployment Successful"
           to: ${{ secrets.EMAIL_TO }}
           from: GitHub Actions
           body: |
-            ✅ Deployment Successful!
+            Deployment Successful 🚀
 
             Repo: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
             Commit: ${{ github.sha }}
 
-            App deployed to EC2 successfully 🚀
+            App URL: http://${{ secrets.EC2_HOST }}
+ 
+      - name: Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Deployment Failed"
+          to: ${{ secrets.EMAIL_TO }}
+          from: GitHub Actions
+          body: |
+            Deployment FAILED ❌
+
+            Repo: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+
+            Check GitHub Actions logs immediately
