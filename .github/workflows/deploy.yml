@@ -53,7 +53,8 @@ jobs:
           key: ${{ secrets.DB_EC2_SSH_KEY }}
           source: "scripts/db-setup.sh"
           target: "/home/${{ secrets.DB_EC2_USER }}/"
- 
+          strip_component: 1
+
       - name: Run DB Setup
         uses: appleboy/ssh-action@master
         with:
@@ -61,8 +62,10 @@ jobs:
           username: ${{ secrets.DB_EC2_USER }}
           key: ${{ secrets.DB_EC2_SSH_KEY }}
           script: |
+            cd /home/${{ secrets.DB_EC2_USER }}
             chmod +x db-setup.sh
             ./db-setup.sh
+          
  
       # ==================================================
       # 🚀 APP DEPLOY (APP EC2)
