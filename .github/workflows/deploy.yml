@@ -61,7 +61,7 @@ jobs:
           key:      ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/${{ secrets.EC2_USER }}/deployments
-            chmod +x scripts/deploy.s
+            chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
 
       # 🔥 9. Email on SUCCESS
