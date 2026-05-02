@@ -51,9 +51,9 @@ jobs:
           host: ${{ secrets.DB_EC2_HOST }}
           username: ${{ secrets.DB_EC2_USER }}
           key: ${{ secrets.DB_EC2_SSH_KEY }}
-          source: "scripts/db-setup.sh"
+          source: "scripts"
           target: "/home/${{ secrets.DB_EC2_USER }}/"
-          strip_component: 1
+          
 
       - name: Run DB Setup
         uses: appleboy/ssh-action@master
@@ -61,10 +61,17 @@ jobs:
           host: ${{ secrets.DB_EC2_HOST }}
           username: ${{ secrets.DB_EC2_USER }}
           key: ${{ secrets.DB_EC2_SSH_KEY }}
-          script: |
-            cd /home/${{ secrets.DB_EC2_USER }}
-            chmod +x db-setup.sh
-            ./db-setup.sh
+          script: |  
+           echo "==== DEBUG START ===="
+           pwd
+           ls -la
+           ls -la scripts
+           echo "==== DEBUG END ===="
+
+           cd scripts
+           chmod +x db-setup.sh
+           ./db-setup.sh
+          
           
  
       # ==================================================
