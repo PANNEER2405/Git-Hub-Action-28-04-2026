@@ -36,7 +36,16 @@ export DEPLOYED_AT=$TIMESTAMP
 
 # 6. Restart app using PM2 (safe restart)
 echo "[DEPLOY] Restarting application with PM2..."
-pm2 start ecosystem.config.js --env production || pm2 restart my-node-app
+pm2 describe my-node-app > /dev/null
+
+if [ $? -ne 0 ]; then
+  echo "[DEPLOY] Starting app..."
+  pm2 start ecosystem.config.js --env production
+else
+  echo "[DEPLOY] Restarting app..."
+  pm2 restart my-node-app
+fi
+
 pm2 save
 
 # 7. Clean old backups (keep last 3)
