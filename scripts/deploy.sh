@@ -3,8 +3,6 @@
 # This script runs ON EC2 — triggered remotely by GitHub Actions via SSH
 # NO build commands here — only extract + restart
  
-set -e    # Exit immediately on any error
- 
 APP_DIR="/var/www/my-node-app"
 DEPLOY_DIR="/home/$(whoami)/deployments"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -35,6 +33,12 @@ npm install --omit=dev
 export NODE_ENV=production
 export PORT=3000
 export DEPLOYED_AT=$TIMESTAMP
+
+# 🔥 DB CONNECTION (FINAL)
+export DB_HOST="DB_EC2_PRIVATE_IP"
+export DB_USER="appuser"
+export DB_PASS="StrongPassword123"
+export DB_NAME="myapp_db"
  
 # 6. Restart app using PM2
 echo "[DEPLOY] Restarting application with PM2..."
@@ -48,3 +52,6 @@ cd $APP_DIR
 ls -dt backup_* 2>/dev/null | tail -n +4 | xargs rm -rf
  
 echo "[DEPLOY] Deployment complete! App is live."
+
+
+
