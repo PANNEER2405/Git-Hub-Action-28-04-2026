@@ -1,16 +1,23 @@
 module.exports = {
   apps: [
     {
-      name:         'my-node-app',
-      script:       'src/app.js',
-      instances:    1,               // increase for load balancing
-      autorestart:  true,
-      watch:        false,           // never watch in production
-      max_memory_restart: '200M',
+      name: 'my-node-app',
+      script: 'src/app.js',
+
       env: {
-        NODE_ENV:     'production',
-        PORT:         3000,
+        NODE_ENV: 'development',
+        PORT: 3000
+      },
+
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        DB_HOST: '100.31.66.141',
+        DB_USER: 'appuser',
+        DB_PASSWORD: 'App@12345',
+        DB_NAME: 'testdb'
       }
     }
   ]
 };
+

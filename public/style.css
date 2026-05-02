@@ -1,21 +1,21 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: #f0f4f8;
   color: #1a1a2e;
 }
- 
+
 header {
   background: linear-gradient(135deg, #1E4A9C, #0D2F6B);
   color: white;
   padding: 2rem;
   text-align: center;
 }
- 
+
 header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 header p  { opacity: 0.8; font-size: 0.9rem; }
- 
+
 main {
   display: flex;
   gap: 1.5rem;
@@ -24,7 +24,7 @@ main {
   margin: 0 auto;
   flex-wrap: wrap;
 }
- 
+
 .card {
   background: white;
   border-radius: 12px;
@@ -32,9 +32,9 @@ main {
   flex: 1 1 320px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
- 
+
 .card h2 { margin-bottom: 1rem; color: #1E4A9C; }
- 
+
 .status-badge {
   display: inline-block;
   padding: 0.4rem 1rem;
@@ -42,9 +42,9 @@ main {
   background: #eee;
   font-weight: bold;
 }
- 
+
 .status-badge.online { background: #d6f0e4; color: #1a7a4a; }
- 
+
 button {
   background: #1E4A9C;
   color: white;
@@ -54,9 +54,9 @@ button {
   cursor: pointer;
   font-size: 0.95rem;
 }
- 
+
 button:hover { background: #0D2F6B; }
- 
+
 pre {
   margin-top: 1rem;
   background: #f2f4f7;
@@ -64,4 +64,28 @@ pre {
   border-radius: 8px;
   font-size: 0.85rem;
   overflow-x: auto;
+}
+
+/* 🔥 NEW: Login Form Styling */
+
+input {
+  width: 100%;
+  padding: 0.6rem;
+  margin-bottom: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #1E4A9C;
+  box-shadow: 0 0 4px rgba(30, 74, 156, 0.3);
+}
+
+#login-status {
+  margin-top: 0.8rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #1E4A9C;
 }

@@ -1,149 +1,99 @@
 name: Build and Deploy to EC2
- 
+
 on:
   push:
     branches:
       - main
- 
+
 jobs:
   build-and-deploy:
+    name: Build on GitHub Runner & Deploy to EC2
     runs-on: ubuntu-latest
- 
+
     steps:
-      # ── Step 1: Checkout ─────────────────────────────
+      # 1. Checkout
       - name: Checkout Repository
         uses: actions/checkout@v4
- 
-      # ── Step 2: Setup Node ───────────────────────────
+
+      # 2. Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
- 
-      # ── Step 3: Install deps ─────────────────────────
+
+      # 3. Install deps
       - name: Install Dependencies
         run: npm install
- 
-      # ── Step 4: Test ────────────────────────────────
+
+      # 4. Test
       - name: Run Tests
         run: npm test
- 
-      # ── Step 5: Build ───────────────────────────────
+
+      # 5. Build
       - name: Build Application
         run: npm run build
         env:
           NODE_ENV: production
- 
-      # ── Step 6: Package ─────────────────────────────
+
+      # 6. Package
       - name: Create Deployment Package
         run: |
           tar -czf /tmp/deployment.tar.gz --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='*.test.js' .
           mv /tmp/deployment.tar.gz ./deployment.tar.gz
           ls -lh deployment.tar.gz
- 
-      # ==================================================
-      # 🔥 DB SETUP (DB EC2)
-      # ==================================================
- 
-      - name: Copy DB Script to DB EC2
+
+      # 7. SCP to EC2
+      - name: Copy Files to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.DB_EC2_HOST }}
-          username: ${{ secrets.DB_EC2_USER }}
-          key: ${{ secrets.DB_EC2_SSH_KEY }}
-          source: "scripts"
-          target: "/home/${{ secrets.DB_EC2_USER }}/"
-          
+          host:     ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
+          source:   'deployment.tar.gz,scripts/deploy.sh'
+          target:   '/home/${{ secrets.EC2_USER }}/deployments'
 
-      - name: Run DB Setup
+      # 8. Deploy
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.DB_EC2_HOST }}
-          username: ${{ secrets.DB_EC2_USER }}
-          key: ${{ secrets.DB_EC2_SSH_KEY }}
-          script: |  
-           echo "==== DEBUG START ===="
-           pwd
-           ls -la
-           ls -la scripts
-           echo "==== DEBUG END ===="
-
-           cd scripts
-           chmod +x db-setup.sh
-           ./db-setup.sh
-          
-          
- 
-      # ==================================================
-      # 🚀 APP DEPLOY (APP EC2)
-      # ==================================================
- 
-      - name: Copy Files to App EC2
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
+          host:     ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "deployment.tar.gz,scripts/deploy.sh"
-          target: "/home/${{ secrets.EC2_USER }}/deployments"
- 
-      - name: Deploy on App EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
           script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASS=${{ secrets.DB_PASS }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-
             cd /home/${{ secrets.EC2_USER }}/deployments
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
- 
-      # ==================================================
-      # 📩 EMAIL NOTIFICATIONS
-      # ==================================================
- 
+
+      # 🔥 9. Email on SUCCESS
       - name: Send Success Email
         if: success()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ Deployment Successful"
+          server_port: 465
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: "✅ Deployment Success"
           to: ${{ secrets.EMAIL_TO }}
-          from: GitHub Actions
+          from: ${{ secrets.EMAIL_USER }}
           body: |
-            Deployment Successful 🚀
-
+            Deployment completed successfully 🚀
             Repo: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
             Commit: ${{ github.sha }}
 
-            App URL: http://${{ secrets.EC2_HOST }}
- 
+      # 🔥 10. Email on FAILURE
       - name: Send Failure Email
         if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.EMAIL_USERNAME }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
+          server_port: 465
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
           subject: "❌ Deployment Failed"
           to: ${{ secrets.EMAIL_TO }}
-          from: GitHub Actions
+          from: ${{ secrets.EMAIL_USER }}
           body: |
-            Deployment FAILED ❌
-
+            Deployment failed ❌
             Repo: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-
-            Check GitHub Actions logs immediately
-
+            Check logs: https://github.com/${{ github.repository }}/actions

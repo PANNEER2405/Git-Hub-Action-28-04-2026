@@ -11,18 +11,35 @@
     <h1>My Node.js App</h1>
     <p id="deploy-info">Loading deployment info...</p>
   </header>
+
   <main>
+
+    <!-- Login Section -->
+    <div class="card">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Enter Username" />
+      <input type="password" id="password" placeholder="Enter Password" />
+      <button onclick="login()">Login</button>
+      <p id="login-status"></p>
+    </div>
+
+    <!-- Server Status -->
     <div class="card">
       <h2>Server Status</h2>
       <div id="status" class="status-badge">Checking...</div>
     </div>
+
+    <!-- API Test -->
     <div class="card">
       <h2>API Test</h2>
       <button id="fetch-btn" onclick="fetchData()">Fetch Data</button>
       <pre id="api-result"></pre>
     </div>
+
   </main>
+
   <script>
+    // Deployment info
     fetch('/api/info')
       .then(r => r.json())
       .then(d => {
@@ -30,7 +47,12 @@
           `Deployed: ${d.deployedAt} | Version: ${d.version}`;
         document.getElementById('status').textContent = 'Online';
         document.getElementById('status').classList.add('online');
+      })
+      .catch(() => {
+        document.getElementById('status').textContent = 'Offline';
       });
+
+    // API Test
     function fetchData() {
       fetch('/api/data')
         .then(r => r.json())
@@ -39,7 +61,27 @@
             JSON.stringify(d, null, 2);
         });
     }
+
+    // Login API
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('login-status').textContent = data.message;
+      })
+      .catch(() => {
+        document.getElementById('login-status').textContent = "Error connecting to server";
+      });
+    }
   </script>
 </body>
 </html>
-
