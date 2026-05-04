@@ -55,10 +55,17 @@ jobs:
       # 8. Deploy
       - name: Deploy on EC2
         uses: appleboy/ssh-action@master
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          APP_VERSION: ${{ github.sha }}
         with:
           host:     ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key:      ${{ secrets.EC2_SSH_KEY }}
+          envs: DB_HOST,DB_USER,DB_PASSWORD,DB_NAME,APP_VERSION
           script: |
             cd /home/${{ secrets.EC2_USER }}/deployments
             chmod +x scripts/deploy.sh
