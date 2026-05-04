@@ -59,14 +59,12 @@ fi
 # 8. Restart app using PM2 safely
 echo "[DEPLOY] Restarting application with PM2..."
 
-pm2 describe "$APP_NAME" > /dev/null
-
-if [ $? -ne 0 ]; then
-  echo "[DEPLOY] Starting app..."
-  pm2 start ecosystem.config.js --env production
-else
-  echo "[DEPLOY] Restarting app..."
+if pm2 describe "$APP_NAME" > /dev/null 2>&1; then
+  echo "[DEPLOY] Restarting existing app..."
   pm2 restart "$APP_NAME" --update-env
+else
+  echo "[DEPLOY] Starting app for first time..."
+  pm2 start ecosystem.config.js --env production
 fi
 
 pm2 save
