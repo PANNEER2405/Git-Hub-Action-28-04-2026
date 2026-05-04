@@ -3,85 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Node.js App</title>
-  <link rel="stylesheet" href="/style.css" />
+
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>DevOps 3-Tier App</title>
+  <link rel="stylesheet" href="/style.css?v=1.0.2" />
 </head>
+
 <body>
-  <header>
-    <h1>My Node.js App</h1>
-    <p id="deploy-info">Loading deployment info...</p>
-  </header>
+  <div class="container">
 
-  <main>
+    <header class="hero">
+      <h1>🚀 DevOps 3-Tier Application</h1>
+      <p>Frontend + Backend on EC2 | Database on Separate EC2</p>
+      <span id="deploy-info">Loading deployment info...</span>
+    </header>
 
-    <!-- Login Section -->
-    <div class="card">
-      <h2>Login</h2>
-      <input type="text" id="username" placeholder="Enter Username" />
-      <input type="password" id="password" placeholder="Enter Password" />
-      <button onclick="login()">Login</button>
-      <p id="login-status"></p>
-    </div>
+    <section class="grid">
 
-    <!-- Server Status -->
-    <div class="card">
-      <h2>Server Status</h2>
-      <div id="status" class="status-badge">Checking...</div>
-    </div>
+      <div class="card">
+        <h2>🔐 Login</h2>
 
-    <!-- API Test -->
-    <div class="card">
-      <h2>API Test</h2>
-      <button id="fetch-btn" onclick="fetchData()">Fetch Data</button>
-      <pre id="api-result"></pre>
-    </div>
+        <input type="text" id="username" placeholder="Enter username" />
+        <input type="password" id="password" placeholder="Enter password" />
 
-  </main>
+        <button onclick="login()">Login</button>
+
+        <p id="login-status" class="message"></p>
+      </div>
+
+      <div class="card">
+        <h2>🟢 Server Status</h2>
+        <div id="status" class="status checking">Checking...</div>
+
+        <button onclick="checkServer()">Refresh Status</button>
+      </div>
+
+      <div class="card">
+        <h2>📡 API Test</h2>
+        <button onclick="fetchData()">Fetch API Data</button>
+
+        <pre id="api-result">No data fetched yet</pre>
+      </div>
+
+    </section>
+
+    <footer>
+      <p>Deployed using GitHub Actions + PM2 + EC2</p>
+    </footer>
+
+  </div>
 
   <script>
-    // Deployment info
-    fetch('/api/info')
-      .then(r => r.json())
-      .then(d => {
-        document.getElementById('deploy-info').textContent =
-          `Deployed: ${d.deployedAt} | Version: ${d.version}`;
-        document.getElementById('status').textContent = 'Online';
-        document.getElementById('status').classList.add('online');
-      })
-      .catch(() => {
-        document.getElementById('status').textContent = 'Offline';
-      });
+    async function checkServer() {
+      const status = document.getElementById("status");
+      const deployInfo = document.getElementById("deploy-info");
 
-    // API Test
-    function fetchData() {
-      fetch('/api/data')
-        .then(r => r.json())
-        .then(d => {
-          document.getElementById('api-result').textContent =
-            JSON.stringify(d, null, 2);
+      status.textContent = "Checking...";
+      status.className = "status checking";
+
+      try {
+        const res = await fetch("/api/info?t=" + Date.now(), {
+          cache: "no-store"
         });
+
+        if (!res.ok) {
+          throw new Error("Server error");
+        }
+
+        const data = await res.json();
+
+        deployInfo.textContent =
+          `Version: ${data.version || "1.0.0"} | Deployed: ${data.deployedAt || "N/A"}`;
+
+        status.textContent = "Online";
+        status.className = "status online";
+
+      } catch (error) {
+        deployInfo.textContent = "Deployment info unavailable";
+        status.textContent = "Offline";
+        status.className = "status offline";
+      }
     }
 
-    // Login API
-    function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    async function fetchData() {
+      const result = document.getElementById("api-result");
+      result.textContent = "Loading...";
 
-      fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username, password })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('login-status').textContent = data.message;
-      })
-      .catch(() => {
-        document.getElementById('login-status').textContent = "Error connecting to server";
-      });
+      try {
+        const res = await fetch("/api/data?t=" + Date.now(), {
+          cache: "no-store"
+        });
+
+        if (!res.ok) {
+          throw new Error("API failed");
+        }
+
+        const data = await res.json();
+        result.textContent = JSON.stringify(data, null, 2);
+
+      } catch (error) {
+        result.textContent = "Error fetching API data";
+      }
     }
+
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const loginStatus = document.getElementById("login-status");
+
+      if (!username || !password) {
+        loginStatus.textContent = "Please enter username and password";
+        loginStatus.className = "message error";
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/login?t=" + Date.now(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          cache: "no-store",
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        loginStatus.textContent = data.message || "Login completed";
+        loginStatus.className = res.ok ? "message success" : "message error";
+
+      } catch (error) {
+        loginStatus.textContent = "Error connecting to server";
+        loginStatus.className = "message error";
+      }
+    }
+
+    checkServer();
   </script>
 </body>
 </html>

@@ -1,11 +1,16 @@
 const express = require('express');
-const path    = require('path');
-const mysql   = require('mysql2');
+const path = require('path');
+const mysql = require('mysql2');
+const apiRoutes = require('./routes/api');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🔥 MySQL Connection (using ENV variables)
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// MySQL Connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -13,58 +18,28 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME
 });
 
-db.connect(err => {
+db.connect((err) => {
   if (err) {
-    console.error('DB connection failed:', err);
+    console.error('DB connection failed:', err.message);
   } else {
     console.log('Connected to MySQL DB');
   }
 });
 
-// Serve static files
-app.use(express.static(path.join(__dirname, '..', 'public')));
-app.use(express.json());
+// API routes
+app.use('/api', apiRoutes(db));
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', uptime: process.uptime() });
-});
-
-// Deployment info
-app.get('/api/info', (req, res) => {
-  res.json({
-    version: process.env.APP_VERSION || '1.0.0',
-    deployedAt: process.env.DEPLOYED_AT || new Date().toISOString(),
-    nodeVersion: process.version,
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime()
   });
 });
 
-// Sample data
-app.get('/api/data', (req, res) => {
-  res.json({
-    items: ['Apple', 'Banana', 'Cherry'],
-    total: 3,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// 🔥 LOGIN API
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.json({ message: 'Username & Password required' });
-  }
-
-  const query = 'INSERT INTO users (username, password) VALUES (?, ?)';
-
-  db.query(query, [username, password], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.json({ message: 'DB error' });
-    }
-    res.json({ message: 'Login data saved successfully' });
-  });
+// Frontend fallback - avoids page 404 for browser refresh
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 // Start server

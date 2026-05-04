@@ -38,3 +38,4 @@ FLUSH PRIVILEGES;
 EOF
 
 echo "[DB-SETUP] Database setup completed!"
+

@@ -1,9 +1,14 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: #f0f4f8;
   color: #1a1a2e;
+  min-height: 100vh;
 }
 
 header {
@@ -13,49 +18,79 @@ header {
   text-align: center;
 }
 
-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-header p  { opacity: 0.8; font-size: 0.9rem; }
+header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+
+#deploy-info {
+  display: inline-block;
+  margin-top: 0.8rem;
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.9rem;
+}
 
 main {
   display: flex;
   gap: 1.5rem;
   padding: 2rem;
-  max-width: 960px;
+  max-width: 1000px;
   margin: 0 auto;
   flex-wrap: wrap;
 }
 
 .card {
   background: white;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 1.5rem;
-  flex: 1 1 320px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  flex: 1 1 300px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
-.card h2 { margin-bottom: 1rem; color: #1E4A9C; }
+.card h2 {
+  margin-bottom: 1rem;
+  color: #1E4A9C;
+}
 
 .status-badge {
   display: inline-block;
-  padding: 0.4rem 1rem;
+  padding: 0.5rem 1.2rem;
   border-radius: 20px;
   background: #eee;
   font-weight: bold;
 }
 
-.status-badge.online { background: #d6f0e4; color: #1a7a4a; }
+.status-badge.online {
+  background: #d6f0e4;
+  color: #1a7a4a;
+}
+
+.status-badge.offline {
+  background: #fde2e2;
+  color: #b42318;
+}
 
 button {
   background: #1E4A9C;
   color: white;
   border: none;
-  padding: 0.6rem 1.4rem;
+  padding: 0.7rem 1.4rem;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.95rem;
+  font-weight: 600;
 }
 
-button:hover { background: #0D2F6B; }
+button:hover {
+  background: #0D2F6B;
+}
 
 pre {
   margin-top: 1rem;
@@ -64,23 +99,22 @@ pre {
   border-radius: 8px;
   font-size: 0.85rem;
   overflow-x: auto;
+  min-height: 80px;
 }
-
-/* 🔥 NEW: Login Form Styling */
 
 input {
   width: 100%;
-  padding: 0.6rem;
+  padding: 0.7rem;
   margin-bottom: 0.8rem;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #ccc;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 input:focus {
   outline: none;
   border-color: #1E4A9C;
-  box-shadow: 0 0 4px rgba(30, 74, 156, 0.3);
+  box-shadow: 0 0 5px rgba(30, 74, 156, 0.3);
 }
 
 #login-status {
